@@ -13,7 +13,9 @@ except ModuleNotFoundError:
 import sys
 import random
 
-headers = 'HTTP/1.1 200 OK\n\n'.encode('utf-8')
+headers200 = 'HTTP/1.1 200 OK\n\n'.encode('utf-8')
+headers404 = 'HTTP/1.1 404 OK\n\n'.encode('utf-8')
+headers403 = 'HTTP/1.1 403 OK\n\n'.encode('utf-8')
 
 class Errors():
     E404 = """<!doctype html>
@@ -24,6 +26,15 @@ class Errors():
 </head>
 <body>
 <h1>404 Not found<h1/></body>
+</html>""".encode('utf-8')
+    E403 = """<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>403 Access denied</title>
+</head>
+<body>
+<h1>403 Access denied<h1/></body>
 </html>""".encode('utf-8')
 errors = Errors()
 class Messages():
@@ -72,39 +83,45 @@ elif sys.argv[1] == '-s':
             exit()
         try: requested_file = workdir + data.split(' ')[1]
         except: continue
-        if requested_file == workdir + '/':
-            requested_file = workdir + '/' + mainfile
-        if os.path.exists(requested_file) == False:
-            print(messages.REQST + '[GET/404] ' + requested_file)
-            signal(SIGPIPE, SIG_DFL)
-            client_socket.send(headers + errors.E404)
-            client_socket.shutdown(socket.SHUT_WR)
-        else:
-            if len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'py':
-                rid = random.randint(0, 99999)
-                os.system('python3 ' + requested_file + ' > /tmp/webx-out' + str(rid))
-                outputFile = open('/tmp/webx-out' + str(rid))
-                output = outputFile.read()
-                outputFile.close()
-                print(messages.REQST + '[GET/200] ' + requested_file)
+        try:
+            if requested_file == workdir + '/':
+                requested_file = workdir + '/' + mainfile
+            if os.path.exists(requested_file) == False:
+                print(messages.REQST + '[GET/404] ' + requested_file)
                 signal(SIGPIPE, SIG_DFL)
-                client_socket.send(headers + output.encode('utf-8'))
-                client_socket.shutdown(socket.SHUT_WR)
-            elif len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'php':
-                rid = random.randint(0, 99999)
-                os.system('php ' + requested_file + ' > /tmp/webx-out' + str(rid))
-                outputFile = open('/tmp/webx-out' + str(rid))
-                output = outputFile.read()
-                outputFile.close()
-                print(messages.REQST + '[GET/200] ' + requested_file)
-                signal(SIGPIPE, SIG_DFL)
-                client_socket.send(headers + output.encode('utf-8'))
+                client_socket.send(headers404 + errors.E404)
                 client_socket.shutdown(socket.SHUT_WR)
             else:
-                file = open(requested_file)
-                response = file.read()
-                file.close()
-                signal(SIGPIPE,SIG_DFL)
-                client_socket.send(headers + response.encode('utf-8'))
-                print(messages.REQST + '[GET/200] ' + requested_file)
-                client_socket.shutdown(socket.SHUT_WR)
+                if len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'py':
+                    rid = random.randint(0, 99999)
+                    os.system('python3 ' + requested_file + ' > /tmp/webx-out' + str(rid))
+                    outputFile = open('/tmp/webx-out' + str(rid))
+                    output = outputFile.read()
+                    outputFile.close()
+                    print(messages.REQST + '[GET/200] ' + requested_file)
+                    signal(SIGPIPE, SIG_DFL)
+                    client_socket.send(headers200 + output.encode('utf-8'))
+                    client_socket.shutdown(socket.SHUT_WR)
+                elif len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'php':
+                    rid = random.randint(0, 99999)
+                    os.system('php ' + requested_file + ' > /tmp/webx-out' + str(rid))
+                    outputFile = open('/tmp/webx-out' + str(rid))
+                    output = outputFile.read()
+                    outputFile.close()
+                    print(messages.REQST + '[GET/200] ' + requested_file)
+                    signal(SIGPIPE, SIG_DFL)
+                    client_socket.send(headers200 + output.encode('utf-8'))
+                    client_socket.shutdown(socket.SHUT_WR)
+                else:
+                    file = open(requested_file)
+                    response = file.read()
+                    file.close()
+                    signal(SIGPIPE,SIG_DFL)
+                    client_socket.send(headers200 + response.encode('utf-8'))
+                    print(messages.REQST + '[GET/200] ' + requested_file)
+                    client_socket.shutdown(socket.SHUT_WR)
+        except IsADirectoryError:
+            client_socket.send(headers403 + errors.E403)
+            print(messages.REQST + '[GET/403] DIR:' + requested_file)
+            client_socket.shutdown(socket.SHUT_WR)
+            client_socket.close()
