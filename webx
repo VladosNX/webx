@@ -13,6 +13,8 @@ except ModuleNotFoundError:
 import sys
 import random
 
+VERSION = '1.0.3'
+
 headers200 = 'HTTP/1.1 200 OK\n\n'.encode('utf-8')
 headers404 = 'HTTP/1.1 404 OK\n\n'.encode('utf-8')
 headers403 = 'HTTP/1.1 403 OK\n\n'.encode('utf-8')
@@ -48,6 +50,9 @@ messages = Messages()
 if len(sys.argv) < 2:
     print("Printing help for WebX")
     print("-s [config]  Start server")
+    print("--version    Print version")
+elif sys.argv[1] == '--version':
+    print(VERSION)
 elif sys.argv[1] == '-s':
     if len(sys.argv) != 3:
         print("Usage: webx -s [config]")
@@ -114,11 +119,11 @@ elif sys.argv[1] == '-s':
                     client_socket.send(headers200 + output.encode('utf-8'))
                     client_socket.shutdown(socket.SHUT_WR)
                 else:
-                    file = open(requested_file)
+                    file = open(requested_file, 'rb')
                     response = file.read()
                     file.close()
                     signal(SIGPIPE,SIG_DFL)
-                    client_socket.send(headers200 + response.encode('utf-8'))
+                    client_socket.send(headers200 + response)
                     print(messages.REQST + '[GET/200] ' + requested_file)
                     client_socket.shutdown(socket.SHUT_WR)
         except IsADirectoryError:
