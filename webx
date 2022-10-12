@@ -81,6 +81,8 @@ elif sys.argv[1] == '-s':
             server.shutdown(socket.SHUT_RDWR)
             server.close()
             exit()
+		except UnicodeDecodeError:
+			continue
         try: requested_file = workdir + data.split(' ')[1]
         except: continue
         try:
