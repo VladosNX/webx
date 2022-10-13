@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 import sys
 import random
 
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 headers200 = 'HTTP/1.1 200 OK\n\n'.encode('utf-8')
 headers404 = 'HTTP/1.1 404 OK\n\n'.encode('utf-8')
@@ -99,21 +99,13 @@ elif sys.argv[1] == '-s':
                 client_socket.shutdown(socket.SHUT_WR)
             else:
                 if len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'py':
-                    rid = random.randint(0, 99999)
-                    os.system('python3 ' + requested_file + ' > /tmp/webx-out' + str(rid))
-                    outputFile = open('/tmp/webx-out' + str(rid))
-                    output = outputFile.read()
-                    outputFile.close()
+                    output = os.popen('python3 ' + requested_file).read()
                     print(messages.REQST + '[GET/200] ' + requested_file)
                     signal(SIGPIPE, SIG_DFL)
                     client_socket.send(headers200 + output.encode('utf-8'))
                     client_socket.shutdown(socket.SHUT_WR)
                 elif len(requested_file.split('.')) > 1 and requested_file.split('.')[1] == 'php':
-                    rid = random.randint(0, 99999)
-                    os.system('php ' + requested_file + ' > /tmp/webx-out' + str(rid))
-                    outputFile = open('/tmp/webx-out' + str(rid))
-                    output = outputFile.read()
-                    outputFile.close()
+                    output = os.popen('php ' + requested_file)
                     print(messages.REQST + '[GET/200] ' + requested_file)
                     signal(SIGPIPE, SIG_DFL)
                     client_socket.send(headers200 + output.encode('utf-8'))
