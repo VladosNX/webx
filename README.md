@@ -36,3 +36,8 @@ Write:
 ## Starting server
 To start server, run this command: **webx -s <config-name>**
 To stop server press Ctrl+C
+
+## WebXF
+WebXF is a framework which can help you to create a site. It's better than
+WebX because WebXF has extra functions such as routes, cookies, etc.
+WebXF.md is a documentation
